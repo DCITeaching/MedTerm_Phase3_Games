@@ -1,0 +1,1739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DCITH Game Library — Phase 3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,800;1,9..144,500&family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0a0f1e;
+    --ink-2: #0f1629;
+    --paper: #fafaf7;
+    --line: #e2e8f0;
+    --gray: #64748b;
+    --gray-lite: #f1f5f9;
+    --yellow-bg: #fefce8;
+
+    --teal: #1a7a6e;
+    --teal-dark: #0f4f46;
+    --teal-lite: #e6f4f1;
+    --teal-glow: #2dd4bf;
+
+    --navy: #1b3a6b;
+    --blue: #1e5a8c;
+    --purple: #6b21a8;
+    --orange: #c05621;
+    --amber: #ca8a04;
+    --red: #991b1b;
+    --green: #166534;
+    --green-glow: #34d399;
+    --coral: #f97316;
+    --pink: #ec4899;
+    --gold: #c49a2a;
+
+    /* per-week accent colors */
+    --week-accent: var(--teal);
+    --week-glow: var(--teal-glow);
+
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+    --shadow-lg: 0 12px 32px rgba(0,0,0,0.12);
+    --shadow-neon: 0 0 24px var(--week-glow);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    line-height: 1.5;
+    font-size: 16px;
+  }
+
+  /* ─── HEADER — ARCADE CONSOLE ─── */
+  .console-header {
+    background: linear-gradient(135deg, var(--ink) 0%, var(--ink-2) 100%);
+    color: white;
+    padding: 32px 24px 24px;
+    position: relative;
+    overflow: hidden;
+    border-bottom: 4px solid var(--week-accent);
+    transition: border-color 0.3s;
+  }
+  .console-header::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-image:
+      radial-gradient(circle at 10% 20%, var(--week-glow) 0%, transparent 40%),
+      radial-gradient(circle at 90% 80%, var(--week-glow) 0%, transparent 40%);
+    opacity: 0.12;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+  .console-inner { max-width: 1200px; margin: 0 auto; position: relative; }
+  .console-eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--week-glow);
+    margin-bottom: 8px;
+    transition: color 0.3s;
+  }
+  .console-title {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(32px, 5vw, 52px);
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 8px;
+    letter-spacing: -0.02em;
+  }
+  .console-title em {
+    font-style: italic;
+    color: var(--week-glow);
+    font-weight: 600;
+    transition: color 0.3s;
+  }
+  .console-sub {
+    font-size: 16px;
+    opacity: 0.7;
+    max-width: 600px;
+    margin-bottom: 28px;
+  }
+
+  /* Week selector — scrollable chip row */
+  .week-selector {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 4px;
+  }
+  .week-chip {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1.5px solid rgba(255, 255, 255, 0.15);
+    color: rgba(255, 255, 255, 0.7);
+    padding: 12px 20px;
+    border-radius: 12px;
+    font-family: inherit;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 130px;
+    text-align: left;
+  }
+  .week-chip:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.3);
+    color: white;
+  }
+  .week-chip.active {
+    background: var(--week-accent);
+    border-color: var(--week-accent);
+    color: white;
+    box-shadow: var(--shadow-neon);
+  }
+  .week-chip:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+  .week-chip .wk-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    opacity: 0.7;
+  }
+  .week-chip .wk-topic {
+    font-family: 'Fraunces', serif;
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  /* ─── MAIN ─── */
+  main { max-width: 1200px; margin: 0 auto; padding: 40px 24px 80px; }
+
+  .week-banner {
+    background: linear-gradient(135deg, var(--week-accent) 0%, color-mix(in srgb, var(--week-accent) 70%, black) 100%);
+    color: white;
+    border-radius: 16px;
+    padding: 28px 32px;
+    margin-bottom: 36px;
+    box-shadow: var(--shadow-md);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .week-banner h2 {
+    font-family: 'Fraunces', serif;
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 4px;
+  }
+  .week-banner .wb-sub {
+    font-size: 14px;
+    opacity: 0.85;
+  }
+  .week-banner .wb-badge {
+    background: rgba(255,255,255,0.2);
+    padding: 10px 18px;
+    border-radius: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  /* Pick-a-game grouped menu */
+  .menu-section { margin-bottom: 40px; }
+  .menu-section h3 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--gray);
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .menu-section h3 .hint {
+    font-family: 'IBM Plex Sans', sans-serif;
+    text-transform: none;
+    letter-spacing: normal;
+    color: var(--gray);
+    font-size: 13px;
+    font-weight: 500;
+  }
+  .game-menu {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+  }
+  .game-tile {
+    background: white;
+    border: 2px solid var(--line);
+    border-radius: 14px;
+    padding: 24px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: left;
+    font-family: inherit;
+    position: relative;
+    overflow: hidden;
+  }
+  .game-tile::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, var(--week-accent) 0%, transparent 50%);
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+    border-radius: 14px;
+  }
+  .game-tile:hover {
+    border-color: var(--week-accent);
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
+  }
+  .game-tile:hover::before { opacity: 0.04; }
+  .game-tile.active {
+    border-color: var(--week-accent);
+    background: color-mix(in srgb, var(--week-accent) 8%, white);
+    box-shadow: var(--shadow-neon);
+  }
+  .game-tile:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  .game-tile .g-emoji {
+    font-size: 40px;
+    line-height: 1;
+    margin-bottom: 14px;
+  }
+  .game-tile h5 {
+    font-family: 'Fraunces', serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 6px;
+    line-height: 1.2;
+  }
+  .game-tile .g-desc { font-size: 13px; color: var(--gray); line-height: 1.5; margin-bottom: 12px; }
+  .game-tile .g-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+  .g-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    background: var(--gray-lite);
+    color: var(--ink);
+    padding: 4px 10px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .g-tag.movement { background: #fed7aa; color: var(--orange); }
+  .g-tag.team { background: #fde68a; color: #92400e; }
+  .g-tag.solo { background: #e0e7ff; color: #3730a3; }
+
+  /* ─── GAME STAGE ─── */
+  .game-stage {
+    background: white;
+    border: 2px solid var(--week-accent);
+    border-radius: 16px;
+    padding: 32px;
+    min-height: 500px;
+    box-shadow: var(--shadow-lg);
+    margin-top: 24px;
+    display: none;
+  }
+  .game-stage.active { display: block; animation: fadeIn 0.3s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  .game-stage h3.game-title {
+    font-family: 'Fraunces', serif;
+    font-size: 28px;
+    color: var(--week-accent);
+    margin-bottom: 12px;
+  }
+  .game-stage p.game-instructions {
+    color: var(--gray);
+    margin-bottom: 20px;
+    font-size: 15px;
+  }
+
+  /* Buttons */
+  .btn {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-primary { background: var(--week-accent); color: white; }
+  .btn-primary:hover { filter: brightness(0.9); }
+  .btn-secondary { background: var(--orange); color: white; }
+  .btn-ghost { background: white; color: var(--ink); border: 2px solid var(--line); }
+  .btn-ghost:hover { border-color: var(--week-accent); }
+  .controls-row { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin-top: 24px; }
+
+  /* ─── MCQ SPRINT ─── */
+  .mcq-wrapper { display: flex; flex-direction: column; gap: 20px; }
+  .mcq-progress {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    color: var(--gray);
+    text-align: right;
+  }
+  .mcq-q-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--week-accent);
+    font-weight: 700;
+    margin-bottom: 8px;
+    letter-spacing: 0.1em;
+  }
+  .mcq-q-text { font-size: 19px; font-weight: 500; margin-bottom: 20px; line-height: 1.4; }
+  .mcq-options { display: grid; gap: 10px; }
+  .mcq-opt {
+    background: white;
+    border: 2px solid var(--line);
+    border-radius: 10px;
+    padding: 14px 18px;
+    text-align: left;
+    font-family: inherit;
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .mcq-opt:hover:not(:disabled) { border-color: var(--week-accent); background: color-mix(in srgb, var(--week-accent) 5%, white); }
+  .mcq-opt.correct { background: #d1fae5; border-color: var(--green); color: var(--green); font-weight: 600; }
+  .mcq-opt.wrong { background: #fee2e2; border-color: var(--red); color: var(--red); }
+  .mcq-opt:disabled { cursor: default; }
+  .mcq-explanation {
+    background: var(--yellow-bg);
+    border-left: 4px solid var(--amber);
+    padding: 16px 20px;
+    border-radius: 8px;
+    margin-top: 12px;
+    font-size: 14px;
+    display: none;
+  }
+  .mcq-explanation.show { display: block; }
+  .mcq-scorecard {
+    background: color-mix(in srgb, var(--week-accent) 10%, white);
+    border-radius: 12px;
+    padding: 24px;
+    text-align: center;
+    display: none;
+  }
+  .mcq-scorecard.show { display: block; }
+  .mcq-scorecard h4 {
+    font-family: 'Fraunces', serif;
+    font-size: 36px;
+    color: var(--week-accent);
+    margin-bottom: 8px;
+  }
+
+  /* ─── TRASH BALL ─── */
+  .tb-wrapper { display: flex; flex-direction: column; gap: 20px; }
+  .tb-scoreboard {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    background: var(--ink);
+    color: white;
+    border-radius: 14px;
+    padding: 20px;
+  }
+  .tb-team {
+    text-align: center;
+    padding: 18px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 2px solid transparent;
+  }
+  .tb-team:hover { transform: scale(1.02); }
+  .tb-team.t1 { background: rgba(26, 122, 110, 0.25); border-color: var(--teal-glow); }
+  .tb-team.t2 { background: rgba(192, 86, 33, 0.25); border-color: var(--orange); }
+  .tb-team.t3 { background: rgba(196, 154, 42, 0.25); border-color: var(--gold); }
+  .tb-team .tb-name { font-family: 'Fraunces', serif; font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+  .tb-team .tb-score { font-family: 'JetBrains Mono', monospace; font-size: 48px; font-weight: 700; line-height: 1; transition: transform 0.2s; }
+  .tb-team .tb-tap-hint { font-size: 10px; margin-top: 6px; opacity: 0.7; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em; }
+  .tb-question {
+    background: color-mix(in srgb, var(--week-accent) 10%, white);
+    border-left: 6px solid var(--week-accent);
+    padding: 24px;
+    border-radius: 10px;
+    font-size: 19px;
+    font-weight: 500;
+    min-height: 90px;
+  }
+  .tb-answer {
+    background: var(--yellow-bg);
+    border: 2px dashed var(--amber);
+    padding: 16px 20px;
+    border-radius: 8px;
+    font-size: 17px;
+    color: var(--navy);
+    font-weight: 600;
+    display: none;
+  }
+  .tb-answer.show { display: block; }
+  .tb-question-counter {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--gray);
+    text-align: right;
+  }
+
+  /* ─── PULSE CHECK ─── */
+  .pcs-wrapper { display: flex; flex-direction: column; gap: 20px; align-items: center; text-align: center; }
+  .pcs-prompt {
+    font-family: 'Fraunces', serif;
+    color: var(--week-accent);
+    padding: 40px;
+    background: color-mix(in srgb, var(--week-accent) 10%, white);
+    border-radius: 16px;
+    width: 100%;
+    min-height: 220px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .pcs-hr-lbl {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 15px;
+    color: var(--gray);
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .pcs-hr-big {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 110px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+  .pcs-reveal-box {
+    width: 100%;
+    padding: 20px 28px;
+    background: var(--gray-lite);
+    border: 2px dashed var(--line);
+    border-radius: 12px;
+    text-align: center;
+    transition: all 0.3s ease;
+  }
+  .pcs-reveal-box.revealed { border-style: solid; }
+  .pcs-reveal-box.revealed.low { background: #dbeafe; border-color: var(--navy); }
+  .pcs-reveal-box.revealed.high { background: #fed7aa; border-color: var(--orange); }
+  .pcs-reveal-box.revealed.normal { background: #d1fae5; border-color: var(--green); }
+  .pcs-reveal-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--gray);
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .pcs-reveal-answer {
+    font-family: 'Fraunces', serif;
+    font-size: 32px;
+    font-weight: 800;
+    color: var(--gray);
+  }
+  .pcs-reveal-box.revealed.low .pcs-reveal-answer { color: var(--navy); }
+  .pcs-reveal-box.revealed.high .pcs-reveal-answer { color: var(--orange); }
+  .pcs-reveal-box.revealed.normal .pcs-reveal-answer { color: var(--green); }
+  .pcs-counter {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 10px 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--gray);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+  .pcs-counter span.n {
+    font-size: 26px;
+    color: var(--week-accent);
+    font-weight: 800;
+  }
+
+  /* ─── VOCAB RELAY ─── */
+  .relay-wrapper { display: flex; flex-direction: column; gap: 20px; }
+  .relay-board {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+  }
+  .relay-col {
+    background: var(--gray-lite);
+    border-radius: 12px;
+    padding: 20px;
+  }
+  .relay-col h5 {
+    font-family: 'Fraunces', serif;
+    font-size: 18px;
+    color: var(--navy);
+    margin-bottom: 12px;
+    text-align: center;
+  }
+  .relay-item {
+    background: white;
+    padding: 12px 14px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    border: 2px solid var(--line);
+    transition: all 0.15s;
+  }
+  .relay-item:hover:not(.matched) { border-color: var(--week-accent); }
+  .relay-item.selected { border-color: var(--week-accent); background: color-mix(in srgb, var(--week-accent) 10%, white); }
+  .relay-item.matched {
+    background: #d1fae5;
+    color: var(--green);
+    font-weight: 600;
+    border-color: var(--green);
+    cursor: default;
+  }
+  .relay-status {
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    color: var(--week-accent);
+    font-size: 15px;
+  }
+
+  /* ─── BINARY SORT (Fast/Slow) ─── */
+  .sort-wrapper { display: flex; flex-direction: column; gap: 20px; }
+  .sort-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .sort-timer {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--orange);
+  }
+  .sort-timer.done { color: var(--gray); }
+  .sort-score {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--week-accent);
+    background: color-mix(in srgb, var(--week-accent) 10%, white);
+    padding: 10px 18px;
+    border-radius: 8px;
+  }
+  .sort-bins { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .sort-bin {
+    border: 3px solid var(--line);
+    border-radius: 12px;
+    padding: 20px;
+    min-height: 180px;
+  }
+  .sort-bin h5 {
+    font-family: 'Fraunces', serif;
+    font-size: 20px;
+    text-align: center;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+  }
+  .sort-bin.a { background: #eff6ff; border-color: var(--navy); }
+  .sort-bin.a h5 { color: var(--navy); border-color: var(--navy); }
+  .sort-bin.b { background: #fff7ed; border-color: var(--orange); }
+  .sort-bin.b h5 { color: var(--orange); border-color: var(--orange); }
+  .sort-count {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: 5px;
+    background: white;
+  }
+  .sort-bin-contents { display: flex; flex-wrap: wrap; gap: 8px; min-height: 80px; }
+  .sort-dropped {
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    animation: dropIn 0.4s ease;
+  }
+  .sort-dropped.correct { background: #d1fae5; color: var(--green); border: 1px solid var(--green); }
+  .sort-dropped.wrong { background: #fee2e2; color: var(--red); border: 1px solid var(--red); text-decoration: line-through; }
+  @keyframes dropIn {
+    from { transform: scale(0) rotate(-10deg); opacity: 0; }
+    to { transform: scale(1) rotate(0); opacity: 1; }
+  }
+  .sort-pool-wrapper {
+    background: white;
+    border: 2px solid var(--line);
+    border-radius: 12px;
+    padding: 20px;
+  }
+  .sort-pool-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--gray);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 700;
+    margin-bottom: 12px;
+  }
+  .sort-pool { display: flex; flex-wrap: wrap; gap: 10px; }
+  .sort-card {
+    background: white;
+    border: 2px solid var(--week-accent);
+    border-radius: 10px;
+    padding: 12px 6px 6px;
+    font-weight: 600;
+    font-size: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 140px;
+    max-width: 200px;
+    text-align: center;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.3s ease;
+  }
+  .sort-card .sort-card-term { color: var(--ink); padding: 2px 8px; }
+  .sort-card-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+  .sort-card-btn {
+    border: none;
+    padding: 6px 8px;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    transition: all 0.15s;
+  }
+  .sort-card-btn.a { background: #dbeafe; color: var(--navy); }
+  .sort-card-btn.a:hover { background: var(--navy); color: white; }
+  .sort-card-btn.b { background: #fed7aa; color: var(--orange); }
+  .sort-card-btn.b:hover { background: var(--orange); color: white; }
+  .sort-card.flying-correct {
+    animation: flyCorrect 0.6s ease forwards;
+  }
+  .sort-card.flying-wrong {
+    animation: flyWrong 0.5s ease forwards;
+  }
+  @keyframes flyCorrect {
+    0% { background: white; transform: scale(1); }
+    30% { background: #d1fae5; border-color: var(--green); transform: scale(1.08); }
+    100% { background: #d1fae5; border-color: var(--green); transform: scale(0.85); opacity: 0.6; }
+  }
+  @keyframes flyWrong {
+    0% { transform: scale(1); }
+    25% { transform: translateX(-8px); background: #fee2e2; border-color: var(--red); }
+    50% { transform: translateX(8px); }
+    75% { transform: translateX(-4px); }
+    100% { transform: scale(1); background: white; border-color: var(--week-accent); }
+  }
+  .sort-final {
+    background: color-mix(in srgb, var(--week-accent) 10%, white);
+    border: 2px solid var(--week-accent);
+    border-radius: 12px;
+    padding: 24px;
+    text-align: center;
+    display: none;
+  }
+  .sort-final.show { display: block; }
+  .sort-final h4 {
+    font-family: 'Fraunces', serif;
+    font-size: 32px;
+    color: var(--week-accent);
+    margin-bottom: 8px;
+  }
+
+  /* ─── EKG WALK ─── */
+  .ekg-stage {
+    background: var(--ink);
+    color: white;
+    border-radius: 16px;
+    padding: 40px 30px;
+    text-align: center;
+  }
+  .ekg-track {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 30px 20px;
+    position: relative;
+  }
+  .ekg-track::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--teal-glow);
+    opacity: 0.4;
+  }
+  .ekg-node {
+    background: white;
+    color: var(--teal-dark);
+    border-radius: 50%;
+    width: 74px;
+    height: 74px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    position: relative;
+    z-index: 2;
+    border: 3px solid var(--teal-glow);
+    font-size: 11px;
+    transition: all 0.3s;
+  }
+  .ekg-node.lit {
+    background: var(--teal-glow);
+    color: var(--ink);
+    transform: scale(1.25);
+    box-shadow: 0 0 30px var(--teal-glow);
+  }
+  .ekg-label { font-size: 12px; color: #94a3b8; margin-top: 8px; }
+  .ekg-wave {
+    margin-top: 24px;
+    padding: 16px;
+    background: rgba(45, 212, 191, 0.15);
+    border-radius: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 15px;
+    color: var(--teal-glow);
+  }
+
+  /* placeholder card for not-yet-built weeks */
+  .placeholder-card {
+    background: white;
+    border: 2px dashed var(--line);
+    border-radius: 16px;
+    padding: 60px 30px;
+    text-align: center;
+  }
+  .placeholder-card .ph-emoji { font-size: 56px; margin-bottom: 16px; }
+  .placeholder-card h3 {
+    font-family: 'Fraunces', serif;
+    font-size: 28px;
+    color: var(--gray);
+    margin-bottom: 12px;
+  }
+  .placeholder-card p { color: var(--gray); max-width: 520px; margin: 0 auto; }
+
+  /* Footer */
+  footer {
+    background: var(--ink);
+    color: #94a3b8;
+    padding: 30px 24px;
+    text-align: center;
+    font-size: 12px;
+    line-height: 1.8;
+  }
+  footer .f-title {
+    font-family: 'Fraunces', serif;
+    color: white;
+    font-size: 16px;
+    margin-bottom: 6px;
+  }
+
+  @media (max-width: 700px) {
+    .console-title { font-size: 32px; }
+    .tb-scoreboard { grid-template-columns: 1fr; }
+    .sort-bins { grid-template-columns: 1fr; }
+    .pcs-hr-big { font-size: 80px; }
+    .ekg-node { width: 56px; height: 56px; font-size: 9px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══ HEADER ═══ -->
+<div class="console-header" id="console-header">
+  <div class="console-inner">
+    <div class="console-eyebrow" id="console-eyebrow">DCITH · HS1B · Game Library</div>
+    <h1 class="console-title">The Floor is <em>Open</em></h1>
+    <p class="console-sub">Six games. Four weeks. Pick a week, pick a game, push the desks back. No grades here — just reps.</p>
+
+    <div class="week-selector" id="week-selector"></div>
+  </div>
+</div>
+
+<main>
+  <div class="week-banner" id="week-banner">
+    <div>
+      <h2 id="wb-title">Loading…</h2>
+      <div class="wb-sub" id="wb-sub">Select a week above</div>
+    </div>
+    <div class="wb-badge" id="wb-badge">—</div>
+  </div>
+
+  <div id="game-content"></div>
+
+  <!-- Solo/Small Group section -->
+  <div class="menu-section" id="menu-solo">
+    <h3>Solo &amp; Small Group <span class="hint">Lower energy · desk work · individual or pairs</span></h3>
+    <div class="game-menu" id="menu-solo-tiles"></div>
+  </div>
+
+  <!-- High-energy section -->
+  <div class="menu-section" id="menu-movement">
+    <h3>Movement &amp; Competition <span class="hint">Push the desks back · whole-class energy</span></h3>
+    <div class="game-menu" id="menu-movement-tiles"></div>
+  </div>
+
+  <!-- Game stages (only one active at a time) -->
+  <div class="game-stage" id="stage-mcq"></div>
+  <div class="game-stage" id="stage-trashball"></div>
+  <div class="game-stage" id="stage-pulse"></div>
+  <div class="game-stage" id="stage-relay"></div>
+  <div class="game-stage" id="stage-sort"></div>
+  <div class="game-stage" id="stage-ekgwalk"></div>
+</main>
+
+<footer>
+  <div class="f-title">DC International Teaching Hospital — Game Library</div>
+  <div>HS1B Medical Terminology · Phase 3: Vital Signs and Flow</div>
+  <div style="margin-top: 8px; opacity: 0.7;">Designed for the Academy of Health Sciences · DC International School · Mr. Patel</div>
+</footer>
+
+<script>
+/* ═══════════════════════════════════════════════════════
+   WEEK CONFIGURATION
+   Add or swap term banks / question pools here.
+   To add a week, follow the same shape as w7.
+═══════════════════════════════════════════════════════ */
+
+const WEEKS = {
+  w7: {
+    wk: 'WEEK 7',
+    topic: 'Cardiovascular',
+    badge: 'Phase 3 · Rotation B',
+    accent: '#1a7a6e',     // teal
+    glow: '#2dd4bf',
+    title: 'Cardiovascular System',
+    subtitle: 'Ms. Evelyn Carter · Outpatient Cardiology · 25 terms',
+
+    mcq: [
+      { q: 'Ms. Carter\'s BP is 162/94. Per the Phase 3 staging chart, how do you classify this?', opts: ['Normal', 'Elevated', 'Stage 1 HTN', 'Stage 2 HTN'], a: 3, ex: 'Stage 2 = systolic ≥140 OR diastolic ≥90. 162 and 94 both qualify.' },
+      { q: 'A patient\'s pulse is 48 bpm and regular. What is the correct term?', opts: ['Tachycardia', 'Bradycardia', 'Arrhythmia', 'Normal sinus rhythm'], a: 1, ex: 'Bradycardia = HR less than 60 in an adult. Regular rhythm rules out arrhythmia.' },
+      { q: 'Which term describes the relaxation phase of the cardiac cycle (bottom BP number)?', opts: ['Systole', 'Diastole', 'Perfusion', 'Ischemia'], a: 1, ex: 'Diastole = ventricles relax and refill. Bottom number in BP.' },
+      { q: 'Which vessel type carries blood AWAY from the heart?', opts: ['Vein', 'Capillary', 'Artery', 'Vena cava'], a: 2, ex: 'Arteries carry blood AWAY. Mnemonic: A for Away.' },
+      { q: 'A patient reports the subjective sensation of a racing heart. Clinical term?', opts: ['Angina', 'Palpitation', 'Arrhythmia', 'Edema'], a: 1, ex: 'Palpitation = patient\'s awareness of their own heartbeat. Arrhythmia is what WE measure.' },
+      { q: 'Which term means tissue death from prolonged ischemia?', opts: ['Ischemia', 'Infarction', 'Angina', 'Perfusion'], a: 1, ex: 'Ischemia is reversible. Infarction = the tissue has died.' },
+      { q: '2+ pitting lower extremity finding in heart failure is called:', opts: ['Cyanosis', 'Edema', 'Murmur', 'Ischemia'], a: 1, ex: 'Peripheral edema often signals right-sided heart failure.' },
+      { q: 'The EKG waveform representing ventricular contraction is:', opts: ['P wave', 'QRS complex', 'T wave', 'PR interval'], a: 1, ex: 'QRS = ventricular contraction. P = atrial contraction. T = ventricular recovery.' },
+      { q: 'Which term describes adequate blood flow reaching tissues?', opts: ['Perfusion', 'Infarction', 'Ischemia', 'Hypertension'], a: 0, ex: 'Perfusion = oxygenated blood flowing through tissues.' },
+      { q: 'Ms. Carter\'s pulse is "irregularly irregular." What term do you document?', opts: ['Bradycardia', 'Sinus rhythm', 'Arrhythmia', 'Hypertension'], a: 2, ex: 'Arrhythmia = any rhythm irregularity. "Irregularly irregular" classically = atrial fibrillation.' },
+    ],
+
+    trashball: {
+      teams: ['Team Systole', 'Team Diastole', 'Team Perfusion'],
+      questions: [
+        { q: 'Top number in a BP reading represents what phase?', a: 'Systole (ventricular contraction)' },
+        { q: 'Heart rate of 48 bpm is called?', a: 'Bradycardia' },
+        { q: 'Tissue death from prolonged ischemia is called?', a: 'Infarction' },
+        { q: 'The chamber that pumps blood to the body is the?', a: 'Left ventricle' },
+        { q: 'The largest artery in the body is?', a: 'Aorta' },
+        { q: 'Define "perfusion" in one sentence.', a: 'The flow of oxygenated blood through tissues.' },
+        { q: 'What vital sign correlates with "tachycardia"?', a: 'Heart rate greater than 100 bpm' },
+        { q: 'Stage 2 hypertension begins at what BP?', a: '≥140 systolic OR ≥90 diastolic' },
+        { q: 'Which EKG waveform represents ventricular contraction?', a: 'QRS complex' },
+        { q: 'A patient reports their heart racing — clinical term?', a: 'Palpitation' },
+        { q: 'The muscular middle layer of the heart wall is?', a: 'Myocardium' },
+        { q: 'Which vessel carries blood TOWARD the heart?', a: 'Vein' },
+        { q: '"Irregularly irregular" pulse suggests what rhythm type?', a: 'Arrhythmia (classically atrial fibrillation)' },
+        { q: 'Peripheral edema in heart failure indicates backup in which side?', a: 'Right side of the heart' },
+        { q: 'Name two medications for hypertension.', a: 'Lisinopril, metoprolol, amlodipine, HCTZ (any 2)' },
+        { q: 'SA node to AV node to Bundle of His to —?', a: 'Purkinje fibers' },
+      ],
+    },
+
+    pulse: {
+      title: 'Pulse Check Showdown',
+      vitalLabel: 'Heart Rate',
+      unit: 'bpm',
+      instruction: 'STAND for TACHYCARDIA · SIT for BRADYCARDIA · HANDS UP for NORMAL',
+      prompts: [
+        { value: '48', type: 'BRADY', action: 'SIT', cls: 'low' },
+        { value: '120', type: 'TACHY', action: 'STAND', cls: 'high' },
+        { value: '78', type: 'NORMAL', action: 'HANDS UP', cls: 'normal' },
+        { value: '155', type: 'TACHY', action: 'STAND', cls: 'high' },
+        { value: '42', type: 'BRADY', action: 'SIT', cls: 'low' },
+        { value: '88', type: 'NORMAL', action: 'HANDS UP', cls: 'normal' },
+        { value: '110', type: 'TACHY', action: 'STAND', cls: 'high' },
+        { value: '55', type: 'BRADY', action: 'SIT', cls: 'low' },
+        { value: '72', type: 'NORMAL', action: 'HANDS UP', cls: 'normal' },
+        { value: '135', type: 'TACHY', action: 'STAND', cls: 'high' },
+        { value: '35', type: 'BRADY', action: 'SIT', cls: 'low' },
+        { value: '95', type: 'NORMAL', action: 'HANDS UP', cls: 'normal' },
+        { value: '105', type: 'TACHY', action: 'STAND', cls: 'high' },
+        { value: '58', type: 'BRADY', action: 'SIT', cls: 'low' },
+        { value: '65', type: 'NORMAL', action: 'HANDS UP', cls: 'normal' },
+      ],
+    },
+
+    relay: [
+      ['myocardium', 'Muscular middle layer of the heart wall'],
+      ['systole', 'Contraction phase — top BP number'],
+      ['diastole', 'Relaxation phase — bottom BP number'],
+      ['bradycardia', 'Heart rate less than 60 bpm'],
+      ['tachycardia', 'Heart rate greater than 100 bpm'],
+      ['aorta', 'Largest artery in the body'],
+      ['infarction', 'Tissue death from prolonged ischemia'],
+      ['perfusion', 'Flow of oxygenated blood through tissues'],
+    ],
+
+    sort: {
+      title: 'Fast vs. Slow Sort',
+      instructions: 'Each card has two buttons — ← BRADY (slow) or TACHY → (fast). Tap the button where it belongs. Correct answers flash green (+1). Wrong answers flash red (−1). 60 seconds.',
+      binA: { key: 'a', label: 'BRADY (slow)' },
+      binB: { key: 'b', label: 'TACHY (fast)' },
+      cards: [
+        { term: 'HR 48', bin: 'a' },
+        { term: 'HR 118', bin: 'b' },
+        { term: 'HR 55', bin: 'a' },
+        { term: 'HR 105', bin: 'b' },
+        { term: 'HR 42', bin: 'a' },
+        { term: 'HR 130', bin: 'b' },
+        { term: 'HR 58', bin: 'a' },
+        { term: 'HR 155', bin: 'b' },
+        { term: 'Vagal response ↑', bin: 'a' },
+        { term: 'Fever response', bin: 'b' },
+        { term: 'Well-trained athlete', bin: 'a' },
+        { term: 'Caffeine overdose', bin: 'b' },
+        { term: 'Beta-blocker ↑', bin: 'a' },
+        { term: 'Anxiety + stress', bin: 'b' },
+      ],
+    },
+
+    ekgwalk: true,   // enabled for W7
+  },
+
+  w8: {
+    wk: 'WEEK 8',
+    topic: 'Pulm + Heme',
+    badge: 'Phase 3 · Rotation B',
+    accent: '#1e5a8c',     // blue
+    glow: '#60a5fa',
+    title: 'Pulmonology + Hematology',
+    subtitle: 'Ms. Carter returns · 25 terms · 13 pulm / 12 heme',
+
+    mcq: [
+      { q: 'Ms. Carter\'s SpO₂ is 88%. What is the correct classification?', opts: ['Normal', 'Mild hypoxia', 'Moderate hypoxia', 'Severe hypoxia'], a: 2, ex: 'Moderate hypoxia = 85–90%. Supplemental O₂ via nasal cannula; notify provider.' },
+      { q: 'A continuous high-pitched whistling breath sound is called:', opts: ['Crackle', 'Wheeze', 'Rhonchi', 'Stridor'], a: 1, ex: 'Wheeze = continuous whistle, usually on expiration, from narrowed airways.' },
+      { q: 'Which term describes a MOVING clot that lodges in a distant vessel?', opts: ['Thrombosis', 'Embolism', 'Coagulation', 'Hemostasis'], a: 1, ex: 'Thrombosis = FORMS in place. Embolism = MOVES. Test: could it travel? If yes = embolism.' },
+      { q: 'Hemoglobin of 9.2 g/dL in a female patient indicates:', opts: ['Normal', 'Anemia', 'Leukocytosis', 'Thrombocytopenia'], a: 1, ex: 'Normal Hgb for females is 12–16 g/dL. 9.2 is well below normal — anemia.' },
+      { q: 'Which structure is the primary muscle of breathing?', opts: ['Alveolus', 'Pleura', 'Diaphragm', 'Bronchus'], a: 2, ex: 'Diaphragm contracts downward to pull air into the lungs. Dome-shaped muscle below the lungs.' },
+      { q: 'Bluish discoloration of the lips from low oxygen is called:', opts: ['Cyanosis', 'Edema', 'Ischemia', 'Pallor'], a: 0, ex: 'Cyanosis = blue discoloration from inadequate oxygen in the blood.' },
+      { q: 'Microscopic air sacs where gas exchange occurs are called:', opts: ['Bronchi', 'Alveoli', 'Pleura', 'Trachea'], a: 1, ex: 'Alveoli are the endpoint of the respiratory tree where O₂ and CO₂ cross the blood-air barrier.' },
+      { q: 'Which CBC component measures the percentage of blood made of red cells?', opts: ['Hemoglobin', 'Hematocrit', 'Platelets', 'WBC'], a: 1, ex: 'Hematocrit = % of blood volume that is RBCs. Normal 36–46% female, 41–53% male.' },
+      { q: 'Bilateral fine crackles at lung bases in a patient with heart failure most likely indicate:', opts: ['Pneumonia', 'Pulmonary edema', 'Asthma', 'Atelectasis'], a: 1, ex: 'Left-heart failure backs fluid into the lungs → fluid in alveoli → crackles. Ms. Carter\'s presentation exactly.' },
+      { q: 'Which term means RAPID breathing (RR > 20)?', opts: ['Dyspnea', 'Tachypnea', 'Apnea', 'Bradypnea'], a: 1, ex: 'Tachy- (fast) + -pnea (breathing). RR greater than 20 in an adult.' },
+    ],
+
+    trashball: {
+      teams: ['Team Ventilation', 'Team Perfusion', 'Team Hemoglobin'],
+      questions: [
+        { q: 'Name the windpipe in medical terms.', a: 'Trachea' },
+        { q: 'What is the primary muscle of breathing?', a: 'Diaphragm' },
+        { q: 'Microscopic air sacs where gas exchange happens?', a: 'Alveoli' },
+        { q: 'Define "dyspnea" in one sentence.', a: 'Shortness of breath / difficulty breathing.' },
+        { q: 'Continuous whistling breath sound?', a: 'Wheeze' },
+        { q: 'Discontinuous popping breath sound?', a: 'Crackles (rales)' },
+        { q: 'Difference between thrombosis and embolism?', a: 'Thrombosis FORMS in place; embolism MOVES.' },
+        { q: 'Normal SpO₂ range on room air?', a: '95–100%' },
+        { q: 'Oxygen-carrying protein in red blood cells?', a: 'Hemoglobin' },
+        { q: 'Name the three main cells on a CBC.', a: 'RBC (erythrocytes), WBC (leukocytes), platelets (thrombocytes)' },
+        { q: 'Bluish discoloration from low oxygen?', a: 'Cyanosis' },
+        { q: 'SpO₂ 88% — how do you classify?', a: 'Moderate hypoxia' },
+        { q: 'Procedure for drawing blood from a vein?', a: 'Phlebotomy / venipuncture' },
+        { q: 'Anemia means a deficiency of what?', a: 'Red blood cells or hemoglobin' },
+        { q: 'Double membrane around the lungs?', a: 'Pleura' },
+        { q: 'Collapse of part of the lung?', a: 'Atelectasis' },
+      ],
+    },
+
+    pulse: {
+      title: 'Breath Rate Check Showdown',
+      vitalLabel: 'Respiratory Rate',
+      unit: '/min',
+      instruction: 'STAND for TACHYPNEA (>20) · SIT for BRADYPNEA (<12) · HANDS UP for NORMAL (12–20)',
+      prompts: [
+        { value: '8', type: 'BRADYPNEA', action: 'SIT', cls: 'low' },
+        { value: '26', type: 'TACHYPNEA', action: 'STAND', cls: 'high' },
+        { value: '14', type: 'NORMAL', action: 'HANDS UP', cls: 'normal' },
+        { value: '32', type: 'TACHYPNEA', action: 'STAND', cls: 'high' },
+        { value: '10', type: 'BRADYPNEA', action: 'SIT', cls: 'low' },
+        { value: '18', type: 'NORMAL', action: 'HANDS UP', cls: 'normal' },
+        { value: '24', type: 'TACHYPNEA', action: 'STAND', cls: 'high' },
+        { value: '6', type: 'BRADYPNEA', action: 'SIT', cls: 'low' },
+        { value: '16', type: 'NORMAL', action: 'HANDS UP', cls: 'normal' },
+        { value: '28', type: 'TACHYPNEA', action: 'STAND', cls: 'high' },
+        { value: '11', type: 'BRADYPNEA', action: 'SIT', cls: 'low' },
+        { value: '20', type: 'NORMAL', action: 'HANDS UP', cls: 'normal' },
+        { value: '22', type: 'TACHYPNEA', action: 'STAND', cls: 'high' },
+        { value: '9', type: 'BRADYPNEA', action: 'SIT', cls: 'low' },
+        { value: '13', type: 'NORMAL', action: 'HANDS UP', cls: 'normal' },
+      ],
+    },
+
+    relay: [
+      ['alveolus', 'Microscopic air sac where gas exchange occurs'],
+      ['diaphragm', 'Primary muscle of breathing'],
+      ['cyanosis', 'Bluish discoloration from low oxygen'],
+      ['hypoxia', 'Low oxygen level in tissues'],
+      ['erythrocyte', 'Red blood cell — carries oxygen'],
+      ['leukocyte', 'White blood cell — fights infection'],
+      ['thrombosis', 'Clot that FORMS in a vessel'],
+      ['phlebotomy', 'Procedure of drawing blood from a vein'],
+    ],
+
+    sort: {
+      title: 'Pulm vs. Heme Sort',
+      instructions: 'Which system does each term belong to — PULMONARY (breathing) or HEMATOLOGIC (blood)? Tap the button on each card. 60 seconds.',
+      binA: { key: 'a', label: 'PULM (breathing)' },
+      binB: { key: 'b', label: 'HEME (blood)' },
+      cards: [
+        { term: 'alveolus', bin: 'a' },
+        { term: 'erythrocyte', bin: 'b' },
+        { term: 'diaphragm', bin: 'a' },
+        { term: 'thrombocyte', bin: 'b' },
+        { term: 'wheeze', bin: 'a' },
+        { term: 'hemoglobin', bin: 'b' },
+        { term: 'trachea', bin: 'a' },
+        { term: 'anemia', bin: 'b' },
+        { term: 'pleura', bin: 'a' },
+        { term: 'leukocyte', bin: 'b' },
+        { term: 'atelectasis', bin: 'a' },
+        { term: 'coagulation', bin: 'b' },
+        { term: 'crackles', bin: 'a' },
+        { term: 'phlebotomy', bin: 'b' },
+      ],
+    },
+
+    ekgwalk: false,   // cardiovascular-specific, offered as cross-week option
+  },
+
+  w9: {
+    wk: 'WEEK 9',
+    topic: 'CODE BLUE',
+    badge: 'Phase 3 · Rotation B',
+    accent: '#b91c1c',     // W9 red
+    glow: '#fca5a5',
+    title: 'CODE BLUE — Emergency Medicine',
+    subtitle: 'Mr. Darnell Thompson · 25 terms · ACLS + loss scenario',
+
+    mcq: [
+      { q: 'Monitor at 1423 shows V-fib. What is the correct intervention?', opts: ['CPR + epinephrine only', 'Defibrillate, then resume CPR', 'Amiodarone 300 mg IV first', 'Confirm asystole before shocking'], a: 1, ex: 'V-fib is SHOCKABLE. Defibrillate immediately, then resume CPR. Epinephrine is given, but AFTER the shock.' },
+      { q: 'Rhythm check at 1435 shows asystole. What do you do?', opts: ['Defibrillate 200J', 'Defibrillate 360J', 'CPR + epinephrine only — do NOT shock', 'Check a pulse, then shock'], a: 2, ex: 'Asystole is NOT shockable. Shocking asystole does nothing. Continue CPR and epinephrine q3–5 min.' },
+      { q: 'Mr. Thompson\'s ETCO₂ has dropped from 22 to 6 mmHg over 20 minutes. What does this tell you?', opts: ['CPR quality is improving', 'Patient is nearing ROSC', 'Poor circulation even with CPR — predicts non-survival', 'Ventilation rate is too high'], a: 2, ex: 'ETCO₂ <10 mmHg after 20 min of good CPR strongly predicts non-survival. It reflects that circulation cannot be maintained even with compressions.' },
+      { q: 'Which rhythm shows organized electrical activity on the monitor but produces NO palpable pulse?', opts: ['V-fib', 'V-tach', 'Asystole', 'PEA'], a: 3, ex: 'PEA = pulseless electrical activity. Monitor LOOKS normal but the heart is not pumping. NOT shockable.' },
+      { q: 'The correct epinephrine dose in adult cardiac arrest is:', opts: ['0.3 mg IM', '1 mg IV every 3–5 min', '10 mg IV every 10 min', '0.1 mg IV once'], a: 1, ex: 'Epinephrine 1 mg IV every 3–5 minutes throughout the code. Same dose for both shockable and non-shockable rhythms.' },
+      { q: 'During CPR, compressions should be:', opts: ['60–80/min at 1 inch deep', '100–120/min at 2–2.4 inches deep', '150/min at 2 inches deep', '100/min at 3 inches deep'], a: 1, ex: 'AHA guidelines: 100–120 compressions/min, 2–2.4 inches deep, full chest recoil, minimize pauses.' },
+      { q: 'When an advanced airway is in place, ventilation rate during CPR should be:', opts: ['30 breaths/min', '20 breaths/min', '10 breaths/min', 'Match compression rate'], a: 2, ex: '10 breaths/min with advanced airway. Asynchronous with compressions. Hyperventilation worsens outcomes.' },
+      { q: 'Mr. Thompson has no DNR on file. His code status is unknown. What does the team do?', opts: ['Wait for family before starting CPR', 'Proceed with full resuscitation per default', 'Give one round of CPR, then stop', 'Contact ethics committee first'], a: 1, ex: 'Absent a documented DNR, the default is full resuscitation. This is why code status documentation matters BEFORE a crisis.' },
+      { q: 'Which factor does NOT contribute to the decision to terminate a resuscitation?', opts: ['Total down-time >20–30 min in asystole', 'ETCO₂ <10 mmHg after 20 min of good CPR', 'Patient age alone', 'Rhythm evolution despite maximal therapy'], a: 2, ex: 'Age alone is not a termination criterion. Down-time, ETCO₂, rhythm evolution, and reversible causes are.' },
+      { q: 'At 1445 the attending calls time of death. What does the team do next?', opts: ['Immediately leave the bedside', 'Continue 5 more minutes of CPR to be sure', 'Stop compressions cleanly, finalize documentation, designate someone to speak with family', 'Transfer patient to morgue immediately'], a: 2, ex: 'Stop interventions cleanly when the code is called. Maintain composure at the bedside. Finalize the log. Designate family notification. The simulation is not over at "time of death called."' },
+    ],
+
+    trashball: {
+      teams: ['Team Shock', 'Team No-Shock', 'Team ROSC'],
+      questions: [
+        { q: 'Name the two SHOCKABLE rhythms.', a: 'V-fib (ventricular fibrillation) and pulseless V-tach (ventricular tachycardia)' },
+        { q: 'Name the two NON-SHOCKABLE rhythms.', a: 'Asystole and PEA (pulseless electrical activity)' },
+        { q: 'What does ROSC stand for?', a: 'Return of spontaneous circulation' },
+        { q: 'Adult epinephrine dose in arrest?', a: '1 mg IV every 3–5 minutes' },
+        { q: 'Compression rate and depth per AHA?', a: '100–120 per minute, 2–2.4 inches deep' },
+        { q: 'What does ETCO₂ measure?', a: 'End-tidal CO₂ — exhaled carbon dioxide, reflects CPR quality and circulation' },
+        { q: 'Goal ETCO₂ during CPR?', a: 'Greater than 10 mmHg' },
+        { q: 'What is "military time" — give today\'s 2:22 PM.', a: '1422 (no colon, no AM/PM)' },
+        { q: 'What does STAT mean?', a: 'Immediately — must be executed without delay (from Latin "statim")' },
+        { q: 'What does DNR stand for and mean?', a: 'Do Not Resuscitate — patient directive against CPR and advanced resuscitation' },
+        { q: 'First-line antiarrhythmic for refractory V-fib?', a: 'Amiodarone 300 mg IV' },
+        { q: 'What is on a crash cart? Name 3 items.', a: 'Defibrillator, emergency meds (epi/amiodarone), airway equipment (BVM/ETT), IV supplies — any 3' },
+        { q: 'Ventilation rate with advanced airway in place?', a: '10 breaths per minute, asynchronous with compressions' },
+        { q: 'What does IO access stand for and when is it used?', a: 'Intraosseous — needle into bone marrow when IV cannot be established quickly' },
+        { q: 'What is therapeutic hypothermia and when is it used?', a: 'Post-ROSC cooling to 32–36°C for 24 hours to reduce neurologic injury in survivors' },
+        { q: 'Name 2 of the "Hs and Ts" reversible causes of arrest.', a: 'Hypovolemia, Hypoxia, H+ (acidosis), Hypo/hyperkalemia, Hypothermia, Toxins, Tamponade, Tension pneumothorax, Thrombosis — any 2' },
+      ],
+    },
+
+    pulse: {
+      title: 'Rhythm Check Showdown',
+      vitalLabel: 'Rhythm on Monitor',
+      unit: '',
+      instruction: 'STAND for SHOCKABLE · SIT for NON-SHOCKABLE · HANDS UP for NORMAL SINUS',
+      prompts: [
+        { value: 'V-fib', type: 'SHOCKABLE', action: 'STAND', cls: 'high' },
+        { value: 'Asystole', type: 'NON-SHOCKABLE', action: 'SIT', cls: 'low' },
+        { value: 'Sinus 72', type: 'NORMAL', action: 'HANDS UP', cls: 'normal' },
+        { value: 'Pulseless V-tach', type: 'SHOCKABLE', action: 'STAND', cls: 'high' },
+        { value: 'PEA', type: 'NON-SHOCKABLE', action: 'SIT', cls: 'low' },
+        { value: 'Sinus 80', type: 'NORMAL', action: 'HANDS UP', cls: 'normal' },
+        { value: 'V-fib (coarse)', type: 'SHOCKABLE', action: 'STAND', cls: 'high' },
+        { value: 'Asystole', type: 'NON-SHOCKABLE', action: 'SIT', cls: 'low' },
+        { value: 'V-fib (fine)', type: 'SHOCKABLE', action: 'STAND', cls: 'high' },
+        { value: 'PEA', type: 'NON-SHOCKABLE', action: 'SIT', cls: 'low' },
+        { value: 'Sinus 68', type: 'NORMAL', action: 'HANDS UP', cls: 'normal' },
+        { value: 'Pulseless V-tach', type: 'SHOCKABLE', action: 'STAND', cls: 'high' },
+        { value: 'Asystole', type: 'NON-SHOCKABLE', action: 'SIT', cls: 'low' },
+        { value: 'V-fib', type: 'SHOCKABLE', action: 'STAND', cls: 'high' },
+        { value: 'Sinus 75', type: 'NORMAL', action: 'HANDS UP', cls: 'normal' },
+      ],
+    },
+
+    relay: [
+      ['cardiac arrest', 'Sudden cessation of effective cardiac function'],
+      ['V-fib', 'Chaotic ventricular activity — SHOCKABLE'],
+      ['asystole', 'Flat line — NOT shockable'],
+      ['ROSC', 'Return of spontaneous circulation after arrest'],
+      ['epinephrine', 'Vasopressor — 1 mg IV every 3–5 minutes in arrest'],
+      ['capnography', 'Continuous measurement of exhaled CO₂ — reflects CPR quality'],
+      ['intubation', 'Placement of an endotracheal tube to secure the airway'],
+      ['defibrillation', 'Controlled electric shock to reset a shockable rhythm'],
+    ],
+
+    sort: {
+      title: 'Shockable vs. Non-Shockable Sort',
+      instructions: 'The most-tested distinction in ACLS. Tap SHOCK or NO-SHOCK on each card. Remember: V-fib and pulseless V-tach get shocks. Asystole and PEA do NOT. 60 seconds.',
+      binA: { key: 'a', label: 'SHOCK' },
+      binB: { key: 'b', label: 'NO-SHOCK' },
+      cards: [
+        { term: 'V-fib', bin: 'a' },
+        { term: 'Asystole', bin: 'b' },
+        { term: 'Pulseless V-tach', bin: 'a' },
+        { term: 'PEA', bin: 'b' },
+        { term: 'V-fib (coarse)', bin: 'a' },
+        { term: 'Asystole with agonal beats', bin: 'b' },
+        { term: 'V-fib (fine)', bin: 'a' },
+        { term: 'PEA with sinus morphology', bin: 'b' },
+        { term: 'Pulseless V-tach monomorphic', bin: 'a' },
+        { term: 'PEA with wide QRS', bin: 'b' },
+        { term: 'Polymorphic V-tach (pulseless)', bin: 'a' },
+        { term: 'Flat line — no electrical activity', bin: 'b' },
+        { term: 'Torsades de pointes (pulseless)', bin: 'a' },
+        { term: 'Bradycardia with pulse', bin: 'b' },
+      ],
+    },
+
+    ekgwalk: true,   // re-enabled for W9 — cardiac pathway stays relevant for rhythm discussion
+  },
+
+  w10: null, // Boards review — will be seeded when W10 content is built
+};
+
+/* ═══════════════════════════════════════════════════════
+   CORE: WEEK SWITCHING
+═══════════════════════════════════════════════════════ */
+
+let currentWeek = 'w7';
+
+function setWeekTheme(week) {
+  document.documentElement.style.setProperty('--week-accent', week.accent);
+  document.documentElement.style.setProperty('--week-glow', week.glow);
+}
+
+function renderWeekSelector() {
+  const el = document.getElementById('week-selector');
+  el.innerHTML = '';
+  const order = ['w7', 'w8', 'w9', 'w10'];
+  order.forEach(key => {
+    const week = WEEKS[key];
+    const btn = document.createElement('button');
+    btn.className = 'week-chip' + (key === currentWeek ? ' active' : '');
+    if (!week) {
+      btn.disabled = true;
+      const [wkNum, label] = key === 'w9' ? ['WEEK 9', 'Coming Soon'] : ['WEEK 10', 'Coming Soon'];
+      btn.innerHTML = `<span class="wk-num">${wkNum}</span><span class="wk-topic">${label}</span>`;
+    } else {
+      btn.innerHTML = `<span class="wk-num">${week.wk}</span><span class="wk-topic">${week.topic}</span>`;
+      btn.onclick = () => switchWeek(key);
+    }
+    el.appendChild(btn);
+  });
+}
+
+function switchWeek(key) {
+  currentWeek = key;
+  const week = WEEKS[key];
+  setWeekTheme(week);
+  document.getElementById('wb-title').textContent = week.title;
+  document.getElementById('wb-sub').textContent = week.subtitle;
+  document.getElementById('wb-badge').textContent = week.badge;
+  renderWeekSelector();
+  renderMenus();
+  closeAllStages();
+  document.getElementById('game-content').innerHTML = '';
+}
+
+/* ═══════════════════════════════════════════════════════
+   MENUS
+═══════════════════════════════════════════════════════ */
+
+const GAME_META = {
+  mcq: { emoji: '🧠', title: 'MCQ Sprint', desc: '10 vignette-style questions. Beat the clock. Boards prep.', tags: ['Solo', '10 min'], group: 'solo' },
+  relay: { emoji: '🔗', title: 'Vocabulary Relay', desc: 'Match term to definition. First team to clear the board wins.', tags: ['Pair/Team', '10 min'], group: 'solo' },
+  sort: { emoji: '🫀', title: 'Binary Sort', desc: 'Sort 14 cards into two bins before the 60s buzzer.', tags: ['Pairs', '5 min', 'Kinesthetic'], group: 'solo' },
+  pulse: { emoji: '⚡', title: 'Pulse Check Showdown', desc: 'Whole class stands, sits, or raises hands based on the vital sign.', tags: ['Whole Class', '5 min', 'Movement'], group: 'movement' },
+  trashball: { emoji: '🏀', title: 'Trash Ball Rounds', desc: 'Answer to earn a shot. 3 teams. Scoreboard. Push desks back.', tags: ['Team', '15 min', 'Movement'], group: 'movement' },
+  ekgwalk: { emoji: '🚶', title: 'EKG Walk', desc: 'Walk the conduction pathway: SA → AV → Bundle → Purkinje.', tags: ['Kinesthetic', '5 min', 'Movement'], group: 'movement' },
+};
+
+function renderMenus() {
+  const week = WEEKS[currentWeek];
+  const soloEl = document.getElementById('menu-solo-tiles');
+  const moveEl = document.getElementById('menu-movement-tiles');
+  soloEl.innerHTML = '';
+  moveEl.innerHTML = '';
+
+  Object.entries(GAME_META).forEach(([gameKey, meta]) => {
+    const targetEl = meta.group === 'solo' ? soloEl : moveEl;
+    const tile = document.createElement('button');
+    tile.className = 'game-tile';
+    tile.dataset.game = gameKey;
+    // Check if this game has data for this week
+    const hasData = gameKey in week && week[gameKey];
+    if (!hasData) {
+      tile.disabled = true;
+    }
+    const tags = meta.tags.map(t => {
+      const cls = t === 'Movement' ? 'movement' : (t.includes('Team') || t.includes('Class') ? 'team' : (t === 'Solo' ? 'solo' : ''));
+      return `<span class="g-tag ${cls}">${t}</span>`;
+    }).join('');
+    tile.innerHTML = `
+      <div class="g-emoji">${meta.emoji}</div>
+      <h5>${meta.title}</h5>
+      <div class="g-desc">${hasData ? meta.desc : 'Not available for this week'}</div>
+      <div class="g-tags">${tags}</div>
+    `;
+    tile.onclick = () => hasData && openGame(gameKey);
+    targetEl.appendChild(tile);
+  });
+}
+
+function closeAllStages() {
+  document.querySelectorAll('.game-stage').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.game-tile').forEach(t => t.classList.remove('active'));
+}
+
+function openGame(key) {
+  closeAllStages();
+  document.querySelector(`.game-tile[data-game="${key}"]`).classList.add('active');
+  const stage = document.getElementById('stage-' + key);
+  stage.classList.add('active');
+  stage.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  // Build the game UI
+  BUILDERS[key](stage);
+}
+
+/* ═══════════════════════════════════════════════════════
+   GAME BUILDERS — each receives its stage DOM element
+═══════════════════════════════════════════════════════ */
+
+const BUILDERS = {
+  mcq: buildMCQ,
+  trashball: buildTrashBall,
+  pulse: buildPulse,
+  relay: buildRelay,
+  sort: buildSort,
+  ekgwalk: buildEKGWalk,
+};
+
+// ─── MCQ SPRINT ─────────────────────────────────────────
+function buildMCQ(stage) {
+  const questions = WEEKS[currentWeek].mcq;
+  stage.innerHTML = `
+    <div class="mcq-wrapper">
+      <h3 class="game-title">🧠 MCQ Sprint — Boards-style</h3>
+      <p class="game-instructions">Clinical vignettes. Pick the best answer. Explanations appear after each question. Score tracked below.</p>
+      <div class="mcq-progress" id="mcq-progress">Question 1 of ${questions.length}</div>
+      <div id="mcq-body"></div>
+      <div class="mcq-scorecard" id="mcq-scorecard">
+        <h4 id="mcq-final">—</h4>
+        <p id="mcq-feedback" style="color: var(--gray);">—</p>
+      </div>
+      <div class="controls-row">
+        <button class="btn btn-ghost" id="mcq-restart">↺ Restart</button>
+        <button class="btn btn-primary" id="mcq-next" disabled>Next →</button>
+      </div>
+    </div>
+  `;
+  let idx = 0, score = 0, answered = false;
+  const body = stage.querySelector('#mcq-body');
+  const prog = stage.querySelector('#mcq-progress');
+  const nextBtn = stage.querySelector('#mcq-next');
+  const card = stage.querySelector('#mcq-scorecard');
+
+  function render() {
+    if (idx >= questions.length) {
+      body.innerHTML = '';
+      prog.textContent = '';
+      card.classList.add('show');
+      stage.querySelector('#mcq-final').textContent = `${score} / ${questions.length}`;
+      const pct = (score / questions.length) * 100;
+      const fb = pct >= 80 ? '🎯 Board-ready.' : pct >= 60 ? '📈 Solid — revisit the terms you missed.' : '📖 Back to Grand Rounds — you are close but not there.';
+      stage.querySelector('#mcq-feedback').textContent = fb;
+      nextBtn.disabled = true;
+      return;
+    }
+    card.classList.remove('show');
+    const q = questions[idx];
+    prog.textContent = `Question ${idx + 1} of ${questions.length}  ·  Score ${score}`;
+    body.innerHTML = `
+      <div class="mcq-q-num">VIGNETTE ${idx + 1}</div>
+      <div class="mcq-q-text">${q.q}</div>
+      <div class="mcq-options">${q.opts.map((o, i) => `<button class="mcq-opt" data-i="${i}">${String.fromCharCode(65 + i)}. ${o}</button>`).join('')}</div>
+      <div class="mcq-explanation" id="mcq-exp">${q.ex}</div>
+    `;
+    answered = false;
+    nextBtn.disabled = true;
+    body.querySelectorAll('.mcq-opt').forEach(opt => {
+      opt.onclick = () => {
+        if (answered) return;
+        answered = true;
+        const sel = +opt.dataset.i;
+        body.querySelectorAll('.mcq-opt').forEach((o, i) => {
+          o.disabled = true;
+          if (i === q.a) o.classList.add('correct');
+          else if (i === sel) o.classList.add('wrong');
+        });
+        if (sel === q.a) score++;
+        body.querySelector('#mcq-exp').classList.add('show');
+        nextBtn.disabled = false;
+      };
+    });
+  }
+  nextBtn.onclick = () => { idx++; render(); };
+  stage.querySelector('#mcq-restart').onclick = () => { idx = 0; score = 0; render(); };
+  render();
+}
+
+// ─── TRASH BALL ─────────────────────────────────────────
+function buildTrashBall(stage) {
+  const cfg = WEEKS[currentWeek].trashball;
+  stage.innerHTML = `
+    <div class="tb-wrapper">
+      <h3 class="game-title">🏀 Trash Ball Rounds</h3>
+      <p class="game-instructions">Divide the class into 3 teams. Tap a team to add 1 point when they answer correctly. After a correct answer, give them one shot at the trash can: 3 ft = +1, 6 ft = +2, 10 ft = +3. First to 15 wins.</p>
+      <div class="tb-scoreboard">
+        ${cfg.teams.map((n, i) => `
+          <div class="tb-team t${i+1}" data-team="${i+1}">
+            <div class="tb-name">${n}</div>
+            <div class="tb-score" id="tb-s${i+1}">0</div>
+            <div class="tb-tap-hint">tap to add 1</div>
+          </div>
+        `).join('')}
+      </div>
+      <div class="tb-question" id="tb-question">Click "Next Question" to begin.</div>
+      <div class="tb-answer" id="tb-answer"></div>
+      <div class="tb-question-counter" id="tb-counter">0 / ${cfg.questions.length} shown</div>
+      <div class="controls-row">
+        <button class="btn btn-primary" id="tb-next">Next Question →</button>
+        <button class="btn btn-secondary" id="tb-reveal">💡 Reveal Answer</button>
+        <button class="btn btn-ghost" id="tb-reset">↺ Reset</button>
+      </div>
+    </div>
+  `;
+  let idx = -1, shown = 0;
+  stage.querySelectorAll('.tb-team').forEach(t => {
+    t.onclick = () => {
+      const el = t.querySelector('.tb-score');
+      el.textContent = +el.textContent + 1;
+      el.style.transform = 'scale(1.3)';
+      setTimeout(() => el.style.transform = 'scale(1)', 200);
+    };
+  });
+  stage.querySelector('#tb-next').onclick = () => {
+    idx = (idx + 1) % cfg.questions.length;
+    shown++;
+    stage.querySelector('#tb-question').textContent = cfg.questions[idx].q;
+    stage.querySelector('#tb-answer').classList.remove('show');
+    stage.querySelector('#tb-counter').textContent = `${shown} / ${cfg.questions.length} shown`;
+  };
+  stage.querySelector('#tb-reveal').onclick = () => {
+    if (idx < 0) return;
+    const a = stage.querySelector('#tb-answer');
+    a.textContent = '💡 ' + cfg.questions[idx].a;
+    a.classList.add('show');
+  };
+  stage.querySelector('#tb-reset').onclick = () => {
+    stage.querySelectorAll('.tb-score').forEach(s => s.textContent = '0');
+    idx = -1; shown = 0;
+    stage.querySelector('#tb-question').textContent = 'Click "Next Question" to begin.';
+    stage.querySelector('#tb-answer').classList.remove('show');
+    stage.querySelector('#tb-counter').textContent = `0 / ${cfg.questions.length} shown`;
+  };
+}
+
+// ─── PULSE CHECK ─────────────────────────────────────────
+function buildPulse(stage) {
+  const cfg = WEEKS[currentWeek].pulse;
+  stage.innerHTML = `
+    <div class="pcs-wrapper">
+      <h3 class="game-title">⚡ ${cfg.title}</h3>
+      <p class="game-instructions" style="max-width:520px;">${cfg.instruction}</p>
+      <div class="pcs-prompt" id="pcs-prompt">
+        <div style="font-size: 26px; color: var(--gray); font-family: 'IBM Plex Sans', sans-serif; font-weight: 500;">Click NEXT to begin</div>
+      </div>
+      <div class="pcs-reveal-box" id="pcs-reveal">
+        <div class="pcs-reveal-label">ANSWER</div>
+        <div class="pcs-reveal-answer" id="pcs-reveal-text">—</div>
+      </div>
+      <div class="pcs-counter"><span class="n" id="pcs-counter-num">0</span> prompts shown</div>
+      <div class="controls-row">
+        <button class="btn btn-primary" id="pcs-next">Next Prompt →</button>
+        <button class="btn btn-secondary" id="pcs-reveal-btn">💡 Reveal Answer</button>
+        <button class="btn btn-ghost" id="pcs-reset">↺ Reset</button>
+      </div>
+    </div>
+  `;
+  let idx = -1, count = 0;
+  stage.querySelector('#pcs-next').onclick = () => {
+    let next;
+    do { next = Math.floor(Math.random() * cfg.prompts.length); } while (next === idx && cfg.prompts.length > 1);
+    idx = next;
+    const p = cfg.prompts[idx];
+    stage.querySelector('#pcs-prompt').innerHTML = `
+      <div class="pcs-hr-lbl">${cfg.vitalLabel}</div>
+      <div class="pcs-hr-big">${p.value}</div>
+      <div class="pcs-hr-lbl" style="margin-top: 10px;">${cfg.unit}</div>
+    `;
+    const rb = stage.querySelector('#pcs-reveal');
+    rb.classList.remove('revealed', 'low', 'high', 'normal');
+    stage.querySelector('#pcs-reveal-text').textContent = 'Hidden — press Reveal to show';
+    count++;
+    stage.querySelector('#pcs-counter-num').textContent = count;
+  };
+  stage.querySelector('#pcs-reveal-btn').onclick = () => {
+    if (idx < 0) return;
+    const p = cfg.prompts[idx];
+    const rb = stage.querySelector('#pcs-reveal');
+    rb.classList.add('revealed', p.cls);
+    stage.querySelector('#pcs-reveal-text').innerHTML = `${p.type} <span style="font-size:17px; opacity:0.7; font-family:'IBM Plex Sans',sans-serif; font-weight:500;">→ ${p.action}</span>`;
+  };
+  stage.querySelector('#pcs-reset').onclick = () => {
+    idx = -1; count = 0;
+    stage.querySelector('#pcs-counter-num').textContent = '0';
+    stage.querySelector('#pcs-prompt').innerHTML = `<div style="font-size: 26px; color: var(--gray); font-family: 'IBM Plex Sans', sans-serif; font-weight: 500;">Click NEXT to begin</div>`;
+    stage.querySelector('#pcs-reveal').classList.remove('revealed', 'low', 'high', 'normal');
+    stage.querySelector('#pcs-reveal-text').textContent = '—';
+  };
+}
+
+// ─── VOCAB RELAY ─────────────────────────────────────────
+function buildRelay(stage) {
+  const pairs = WEEKS[currentWeek].relay;
+  stage.innerHTML = `
+    <div class="relay-wrapper">
+      <h3 class="game-title">🔗 Vocabulary Relay</h3>
+      <p class="game-instructions">Click a term, then click its matching definition. Matched pairs turn green. Clear all ${pairs.length} to win.</p>
+      <div class="relay-board">
+        <div class="relay-col">
+          <h5>Terms</h5>
+          <div id="relay-terms"></div>
+        </div>
+        <div class="relay-col">
+          <h5>Definitions</h5>
+          <div id="relay-defs"></div>
+        </div>
+      </div>
+      <div class="relay-status" id="relay-status">0 / ${pairs.length} matched</div>
+      <div class="controls-row">
+        <button class="btn btn-primary" id="relay-reset">🔄 Reshuffle</button>
+      </div>
+    </div>
+  `;
+  let selected = null, matched = 0;
+  function render() {
+    matched = 0; selected = null;
+    const terms = pairs.map((p, i) => ({ k: i, v: p[0] }));
+    const defs = pairs.map((p, i) => ({ k: i, v: p[1] }));
+    terms.sort(() => Math.random() - 0.5);
+    defs.sort(() => Math.random() - 0.5);
+    stage.querySelector('#relay-terms').innerHTML = terms.map(t => `<div class="relay-item" data-type="t" data-idx="${t.k}">${t.v}</div>`).join('');
+    stage.querySelector('#relay-defs').innerHTML = defs.map(d => `<div class="relay-item" data-type="d" data-idx="${d.k}">${d.v}</div>`).join('');
+    stage.querySelector('#relay-status').textContent = `0 / ${pairs.length} matched`;
+    stage.querySelectorAll('.relay-item').forEach(el => {
+      el.onclick = () => {
+        if (el.classList.contains('matched')) return;
+        if (!selected) {
+          selected = el;
+          el.classList.add('selected');
+        } else {
+          if (selected.dataset.type !== el.dataset.type && selected.dataset.idx === el.dataset.idx) {
+            selected.classList.add('matched'); el.classList.add('matched');
+            selected.classList.remove('selected');
+            matched++;
+            stage.querySelector('#relay-status').textContent = `${matched} / ${pairs.length} matched`;
+            if (matched === pairs.length) {
+              stage.querySelector('#relay-status').innerHTML = `🏆 <span style="color:var(--green)">COMPLETE!</span>`;
+            }
+          } else {
+            selected.classList.remove('selected');
+            el.style.background = '#fee2e2';
+            el.style.borderColor = 'var(--red)';
+            setTimeout(() => { el.style.background = ''; el.style.borderColor = ''; }, 400);
+          }
+          selected = null;
+        }
+      };
+    });
+  }
+  stage.querySelector('#relay-reset').onclick = render;
+  render();
+}
+
+// ─── BINARY SORT ─────────────────────────────────────────
+function buildSort(stage) {
+  const cfg = WEEKS[currentWeek].sort;
+  stage.innerHTML = `
+    <div class="sort-wrapper">
+      <h3 class="game-title">🫀 ${cfg.title}</h3>
+      <p class="game-instructions">${cfg.instructions}</p>
+      <div class="sort-header-row">
+        <div class="sort-timer" id="sort-timer">⏱ 60s</div>
+        <div class="sort-score" id="sort-score">Score: 0</div>
+      </div>
+      <div class="sort-bins">
+        <div class="sort-bin a">
+          <h5>${cfg.binA.label} <span class="sort-count" id="sort-a-count">0</span></h5>
+          <div class="sort-bin-contents" id="sort-a-bin"></div>
+        </div>
+        <div class="sort-bin b">
+          <h5>${cfg.binB.label} <span class="sort-count" id="sort-b-count">0</span></h5>
+          <div class="sort-bin-contents" id="sort-b-bin"></div>
+        </div>
+      </div>
+      <div class="sort-pool-wrapper">
+        <div class="sort-pool-label">Tap a button on each card to assign it</div>
+        <div class="sort-pool" id="sort-pool"></div>
+      </div>
+      <div class="sort-final" id="sort-final">
+        <h4 id="sort-final-score">—</h4>
+        <p id="sort-final-fb" style="color: var(--gray);">—</p>
+      </div>
+      <div class="controls-row">
+        <button class="btn btn-primary" id="sort-start">▶ Start 60s</button>
+        <button class="btn btn-ghost" id="sort-reset">↺ Reset</button>
+      </div>
+    </div>
+  `;
+  let score = 0, correct = 0, total = 0, active = false, interval = null, t = 60;
+  function renderPool() {
+    const poolEl = stage.querySelector('#sort-pool');
+    poolEl.innerHTML = '';
+    [...cfg.cards].sort(() => Math.random() - 0.5).forEach(c => {
+      const el = document.createElement('div');
+      el.className = 'sort-card';
+      el.dataset.correctBin = c.bin;
+      el.innerHTML = `
+        <div class="sort-card-term">${c.term}</div>
+        <div class="sort-card-btns">
+          <button class="sort-card-btn a">← ${cfg.binA.label.split(' ')[0]}</button>
+          <button class="sort-card-btn b">${cfg.binB.label.split(' ')[0]} →</button>
+        </div>
+      `;
+      el.querySelector('.sort-card-btn.a').onclick = () => choose(el, 'a', c);
+      el.querySelector('.sort-card-btn.b').onclick = () => choose(el, 'b', c);
+      poolEl.appendChild(el);
+    });
+  }
+  function choose(el, chosen, card) {
+    if (!active) return;
+    if (el.dataset.sorted) return;
+    el.dataset.sorted = 'true';
+    const isCorrect = (chosen === card.bin);
+    total++;
+    if (isCorrect) { score++; correct++; el.classList.add('flying-correct'); }
+    else { score = Math.max(0, score - 1); el.classList.add('flying-wrong'); }
+    el.querySelectorAll('.sort-card-btn').forEach(b => b.disabled = true);
+    const dest = stage.querySelector('#sort-' + chosen + '-bin');
+    const drop = document.createElement('div');
+    drop.className = 'sort-dropped ' + (isCorrect ? 'correct' : 'wrong');
+    drop.textContent = card.term;
+    dest.appendChild(drop);
+    const cnt = stage.querySelector('#sort-' + chosen + '-count');
+    cnt.textContent = +cnt.textContent + 1;
+    stage.querySelector('#sort-score').textContent = `Score: ${score} · ${correct}/${total}`;
+    setTimeout(() => { el.style.display = 'none'; }, 600);
+    if (total >= cfg.cards.length) finish();
+  }
+  function start() {
+    reset(); active = true; t = 60;
+    stage.querySelector('#sort-timer').textContent = '⏱ ' + t + 's';
+    interval = setInterval(() => {
+      t--;
+      stage.querySelector('#sort-timer').textContent = '⏱ ' + t + 's';
+      if (t <= 0) { clearInterval(interval); interval = null; finish(); }
+    }, 1000);
+  }
+  function finish() {
+    active = false; if (interval) { clearInterval(interval); interval = null; }
+    stage.querySelector('#sort-timer').classList.add('done');
+    stage.querySelector('#sort-timer').textContent = `⏱ Time's up!`;
+    stage.querySelector('#sort-final').classList.add('show');
+    stage.querySelector('#sort-final-score').textContent = `${correct} / ${cfg.cards.length}`;
+    const pct = (correct / cfg.cards.length) * 100;
+    const fb = total < cfg.cards.length
+      ? `Sorted ${total} of ${cfg.cards.length} before time ran out. Net score: ${score}.`
+      : pct >= 90 ? `🎯 Automatic — you know these cold.`
+      : pct >= 70 ? `📈 Solid. A few more reps and this is reflex.`
+      : `📖 Review the definitions and run it again.`;
+    stage.querySelector('#sort-final-fb').textContent = fb;
+  }
+  function reset() {
+    active = false; if (interval) { clearInterval(interval); interval = null; }
+    score = 0; correct = 0; total = 0; t = 60;
+    stage.querySelector('#sort-timer').textContent = '⏱ 60s';
+    stage.querySelector('#sort-timer').classList.remove('done');
+    stage.querySelector('#sort-score').textContent = 'Score: 0';
+    stage.querySelector('#sort-a-bin').innerHTML = '';
+    stage.querySelector('#sort-b-bin').innerHTML = '';
+    stage.querySelector('#sort-a-count').textContent = '0';
+    stage.querySelector('#sort-b-count').textContent = '0';
+    stage.querySelector('#sort-final').classList.remove('show');
+    renderPool();
+  }
+  stage.querySelector('#sort-start').onclick = start;
+  stage.querySelector('#sort-reset').onclick = reset;
+  renderPool();
+}
+
+// ─── EKG WALK ─────────────────────────────────────────
+function buildEKGWalk(stage) {
+  stage.innerHTML = `
+    <div class="ekg-stage">
+      <h3 style="font-family: 'Fraunces', serif; font-size: 28px; color: white; margin-bottom: 10px;">🚶 EKG Walk — the Electrical Pathway</h3>
+      <p style="opacity: 0.75; margin-bottom: 8px; max-width: 700px; margin-left: auto; margin-right: auto;">Tape the floor with 4 stops. Students walk the conduction pathway to the beat. Click PLAY to light up each node in rhythm. Say the node name out loud as you reach it.</p>
+      <div class="ekg-track">
+        <div><div class="ekg-node" id="ekg-1">SA<br>node</div><div class="ekg-label">Start</div></div>
+        <div><div class="ekg-node" id="ekg-2">AV<br>node</div><div class="ekg-label">Delay</div></div>
+        <div><div class="ekg-node" id="ekg-3">Bundle<br>of His</div><div class="ekg-label">Down</div></div>
+        <div><div class="ekg-node" id="ekg-4">Purkinje<br>fibers</div><div class="ekg-label">Squeeze</div></div>
+      </div>
+      <div class="ekg-wave" id="ekg-wave">— · — · — · — · Press PLAY</div>
+      <div class="controls-row" style="margin-top: 16px;">
+        <button class="btn btn-primary" id="ekg-60">▶ 60 bpm (sinus)</button>
+        <button class="btn btn-secondary" id="ekg-100">▶ 100 bpm (tachy)</button>
+        <button class="btn btn-primary" id="ekg-45" style="background: var(--navy);">▶ 45 bpm (brady)</button>
+        <button class="btn btn-ghost" id="ekg-stop">■ Stop</button>
+      </div>
+    </div>
+  `;
+  let interval = null, pos = 0;
+  function start(bpm) {
+    stop();
+    const i = 60000 / bpm / 4;
+    stage.querySelector('#ekg-wave').textContent = `♥ ${bpm} bpm  ·  ${bpm < 60 ? 'BRADY' : bpm > 100 ? 'TACHY' : 'SINUS'}`;
+    interval = setInterval(() => {
+      stage.querySelectorAll('.ekg-node').forEach(n => n.classList.remove('lit'));
+      stage.querySelector('#ekg-' + (pos + 1)).classList.add('lit');
+      pos = (pos + 1) % 4;
+    }, i);
+  }
+  function stop() {
+    if (interval) clearInterval(interval); interval = null;
+    stage.querySelectorAll('.ekg-node').forEach(n => n.classList.remove('lit'));
+    stage.querySelector('#ekg-wave').textContent = '— · — · — · — · Stopped';
+  }
+  stage.querySelector('#ekg-60').onclick = () => start(60);
+  stage.querySelector('#ekg-100').onclick = () => start(100);
+  stage.querySelector('#ekg-45').onclick = () => start(45);
+  stage.querySelector('#ekg-stop').onclick = stop;
+}
+
+/* ═══════════════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════════════ */
+
+switchWeek('w7');
+</script>
+
+</body>
+</html>
